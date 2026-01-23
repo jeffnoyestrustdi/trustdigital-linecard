@@ -15,30 +15,31 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
-    with:
-      submodules: true
-      lfs: false
+      - uses: actions/checkout@v4
 
-  -   name: Use Node 20
-    uses: actions/setup-node@v4
-    with:
-      node-version: 20
-      cache: "npm"
+      # Vite 7 needs Node 20.19+ (or 22.12+). Use 20.x.
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-  -  name: Build And Deploy
-    id: builddeploy
-    uses: Azure/static-web-apps-deploy@v1
-    with:
-      azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_BAY_0B7936A10 }}
-      repo_token: ${{ secrets.GITHUB_TOKEN }}
-      action: "upload"
-      app_location: "/"
-      api_location: "api"
-      output_location: "dist"
-          skip_app_build: true
-          # optional, but can help avoid surprise API builds if you don't have an api folder yet:
-          # skip_api_build: true
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        id: deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_BAY_0B7936A10 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "/"
+          api_location: "api"
+          output_location: "dist"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -46,7 +47,6 @@ jobs:
     name: Close Pull Request Job
     steps:
       - name: Close Pull Request
-        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_BAY_0B7936A10 }}
