@@ -1,0 +1,32 @@
+[
+  {
+    "vendor": "HPE",
+    "category": "Compute",
+    "primaryOffering": "ProLiant servers + deployment services",
+    "secondaryOffering": "HPE GreenLake advisory",
+    "tags": ["Enterprise", "Data Center"],
+    "links": [
+      { "title": "Talk to an Engineer", "url": "https://www.trustdigital.net/contact" }
+    ]
+  },
+  {
+    "vendor": "Extreme Networks",
+    "category": "Networking",
+    "primaryOffering": "Core switching + campus LAN design",
+    "secondaryOffering": "Cloud-managed networking advisory",
+    "tags": ["Mid-Market", "Enterprise"],
+    "links": [
+      { "title": "Talk to an Engineer", "url": "https://www.trustdigital.net/contact" }
+    ]
+  },
+  {
+    "vendor": "iXsystems",
+    "category": "Storage & Backup",
+    "primaryOffering": "TrueNAS backup target + implementation",
+    "secondaryOffering": "Retention + recovery testing design",
+    "tags": ["SMB", "Mid-Market"],
+    "links": [
+      { "title": "Talk to an Engineer", "url": "https://www.trustdigital.net/contact" }
+    ]
+  }
+]
