@@ -1,9 +1,7 @@
 {
   "routes": [
-    {
-      "route": "/admin/*",
-      "allowedRoles": ["authenticated"]
-    }
+    { "route": "/admin", "allowedRoles": ["authenticated"] },
+    { "route": "/admin/*", "allowedRoles": ["authenticated"] }
   ],
   "navigationFallback": {
     "rewrite": "/index.html"
