@@ -3,5 +3,17 @@
     { "route": "/admin", "allowedRoles": ["authenticated"] },
     { "route": "/admin/*", "allowedRoles": ["authenticated"] }
   ],
-  "navigationFallback": { "rewrite": "/index.html" }
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    },
+    "403": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  }
 }
