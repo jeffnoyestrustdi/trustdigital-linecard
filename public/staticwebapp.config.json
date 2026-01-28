@@ -1,9 +1,10 @@
 {
   "routes": [
-    { "route": "/api/*", "allowedRoles": ["authenticated"] },
-
     { "route": "/admin", "allowedRoles": ["authenticated"] },
-    { "route": "/admin/*", "allowedRoles": ["authenticated"] }
+    { "route": "/admin/*", "allowedRoles": ["authenticated"] },
+
+    { "route": "/api/vendor", "allowedRoles": ["authenticated"] },
+    { "route": "/api/vendor/*", "allowedRoles": ["authenticated"] }
   ],
   "responseOverrides": {
     "401": {
