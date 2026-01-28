@@ -1,5 +1,7 @@
 {
   "routes": [
+    { "route": "/api/*", "allowedRoles": ["authenticated"] },
+
     { "route": "/admin", "allowedRoles": ["authenticated"] },
     { "route": "/admin/*", "allowedRoles": ["authenticated"] }
   ],
