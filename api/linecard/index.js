@@ -1,8 +1,7 @@
 const { getClient } = require("../_shared/table");
 
 module.exports = async function (context, req) {
-  const client = getClient();
-  const entities = [];
+  const client = await getClient();
 
   for await (const e of client.listEntities()) {
     entities.push({

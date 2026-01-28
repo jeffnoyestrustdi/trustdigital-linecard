@@ -8,7 +8,7 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const client = getClient();
+  const client = await getClient();
 
   if (req.method === "POST") {
     const b = req.body || {};
