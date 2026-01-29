@@ -14,7 +14,18 @@ module.exports = async function (context, req) {
     const email = getUserEmail(req);
     context.log("vendor: extracted email:", email || "(none)");
 
-    // Authorization check (unchanged)
+    // GET endpoint - list all vendors (publicly accessible for displaying the line card)
+    if (req.method === "GET") {
+      const client = await getClient();
+      const entities = [];
+      for await (const e of client.listEntities()) {
+        entities.push(e);
+      }
+      context.res = { status: 200, headers: { "content-type": "application/json" }, body: entities };
+      return;
+    }
+
+    // Authorization check for POST/DELETE
     if (!isAdmin(req)) {
       context.log("vendor: isAdmin returned false");
       context.res = { status: 403, headers: { "content-type": "text/plain" }, body: "Forbidden" };
@@ -26,17 +37,50 @@ module.exports = async function (context, req) {
 
     if (req.method === "POST") {
       const b = req.body || {};
+      
+      // Validate required fields
+      const vendorName = (b.vendor || "").trim();
+      if (!vendorName) {
+        context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Vendor name is required" };
+        return;
+      }
+
       const id = crypto.randomUUID();
 
-      await client.createEntity({
+      const entity = {
         partitionKey: "linecard",
         rowKey: id,
-        vendor: b.vendor || "",
+        vendor: vendorName,
         category: b.category || "",
         primaryOffering: b.primaryOffering || "",
         secondaryOffering: b.secondaryOffering || "",
-        tags: JSON.stringify(b.tags || [])
-      });
+        tags: JSON.stringify(b.tags || []),
+        createdBy: email || "",
+        createdAt: new Date().toISOString()
+      };
+
+      // Validate and add logo URL if provided
+      if (b.logo) {
+        const logoUrl = (b.logo || "").trim();
+        // Validate that the logo URL is a proper HTTP/HTTPS URL
+        try {
+          const parsed = new URL(logoUrl);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            entity.logoUrl = logoUrl;
+          } else {
+            context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Logo URL must use HTTP or HTTPS protocol" };
+            return;
+          }
+        } catch (_e) {
+          context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Invalid logo URL format" };
+          return;
+        }
+      }
+      
+      // Add enrichment data if provided
+      if (b.enrich) entity.enrich = JSON.stringify(b.enrich);
+
+      await client.createEntity(entity);
 
       context.res = { status: 201, headers: { "content-type": "application/json" }, body: { ok: true, id } };
       return;
