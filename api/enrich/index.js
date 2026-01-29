@@ -1,7 +1,7 @@
 const fetch = require("node-fetch");
 
 function isLikelyHttps(u) {
-  try { const p = new URL(u); return p.protocol === "https:"; } catch (e) { return false; }
+  try { const p = new URL(u); return p.protocol === "https:"; } catch (_e) { return false; }
 }
 
 module.exports = async function (context, req) {
