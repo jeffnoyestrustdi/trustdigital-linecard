@@ -29,7 +29,8 @@ export default function Admin() {
     const r = await fetch("/api/vendor", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      credentials: "include"
     });
 
     if (!r.ok) alert(await r.text());
@@ -40,7 +41,10 @@ export default function Admin() {
   }
 
   async function remove(id) {
-    const r = await fetch(`/api/vendor?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const r = await fetch(`/api/vendor?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
     if (!r.ok) alert(await r.text());
     else load();
   }
