@@ -1,9 +1,11 @@
 const { TableClient } = require("@azure/data-tables");
 
 async function getClient() {
-  const conn = process.env.AzureWebJobsStorage;
+  // Use a custom env var for Static Web Apps (do NOT rely on AzureWebJobsStorage here).
+  // For local dev you can still use AzureWebJobsStorage via local.settings.json.
+  const conn = process.env.LINECARD_STORAGE_CONN || process.env.AzureWebJobsStorage;
   if (!conn) {
-    throw new Error("AzureWebJobsStorage is not set");
+    throw new Error("Storage connection string is not set. Set LINECARD_STORAGE_CONN (or AzureWebJobsStorage for local dev).");
   }
 
   const tableName = "LineCard";
