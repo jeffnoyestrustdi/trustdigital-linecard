@@ -14,7 +14,7 @@ module.exports = async function (context, req) {
     const email = getUserEmail(req);
     context.log("vendor: extracted email:", email || "(none)");
 
-    // GET endpoint - list all vendors (no auth required for read)
+    // GET endpoint - list all vendors (publicly accessible for displaying the line card)
     if (req.method === "GET") {
       const client = await getClient();
       const entities = [];
@@ -37,12 +37,20 @@ module.exports = async function (context, req) {
 
     if (req.method === "POST") {
       const b = req.body || {};
+      
+      // Validate required fields
+      const vendorName = (b.vendor || "").trim();
+      if (!vendorName) {
+        context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Vendor name is required" };
+        return;
+      }
+
       const id = crypto.randomUUID();
 
       const entity = {
         partitionKey: "linecard",
         rowKey: id,
-        vendor: b.vendor || "",
+        vendor: vendorName,
         category: b.category || "",
         primaryOffering: b.primaryOffering || "",
         secondaryOffering: b.secondaryOffering || "",
@@ -51,8 +59,23 @@ module.exports = async function (context, req) {
         createdAt: new Date().toISOString()
       };
 
-      // Add logo URL if provided
-      if (b.logo) entity.logoUrl = b.logo;
+      // Validate and add logo URL if provided
+      if (b.logo) {
+        const logoUrl = (b.logo || "").trim();
+        // Validate that the logo URL is a proper HTTP/HTTPS URL
+        try {
+          const parsed = new URL(logoUrl);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            entity.logoUrl = logoUrl;
+          } else {
+            context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Logo URL must use HTTP or HTTPS protocol" };
+            return;
+          }
+        } catch (_e) {
+          context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Invalid logo URL format" };
+          return;
+        }
+      }
       
       // Add enrichment data if provided
       if (b.enrich) entity.enrich = JSON.stringify(b.enrich);

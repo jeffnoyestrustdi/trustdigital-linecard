@@ -12,7 +12,8 @@ module.exports = async function (context, req) {
         category: e.category,
         primaryOffering: e.primaryOffering,
         secondaryOffering: e.secondaryOffering,
-        tags: e.tags ? JSON.parse(e.tags) : []
+        tags: e.tags ? JSON.parse(e.tags) : [],
+        logoUrl: e.logoUrl || null
       });
     }
 

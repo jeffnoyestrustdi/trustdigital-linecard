@@ -1,9 +1,33 @@
 const { BlobServiceClient } = require("@azure/storage-blob");
 const { isAdmin } = require("../_shared/auth");
 
-function getAccountNameFromConnectionString(conn) { const m = conn.match(/AccountName=([^;]+)/i); return m ? m[1] : null; }
-function sanitizeName(name) { return name.replace(/[^a-z0-9-_.]/gi, "-").toLowerCase(); }
-function contentTypeFromFilename(filename) { const ext = (filename || "").split(".").pop().toLowerCase(); switch (ext) { case "jpg": case "jpeg": return "image/jpeg"; case "png": return "image/png"; case "webp": return "image/webp"; case "gif": return "image/gif"; case "svg": return "image/svg+xml"; default: return "application/octet-stream"; } }
+function getAccountNameFromConnectionString(conn) {
+  const m = conn.match(/AccountName=([^;]+)/i);
+  return m ? m[1] : null;
+}
+
+function sanitizeName(name) {
+  return name.replace(/[^a-z0-9-_.]/gi, "-").toLowerCase();
+}
+
+function contentTypeFromFilename(filename) {
+  const ext = (filename || "").split(".").pop().toLowerCase();
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    case "svg":
+      return "image/svg+xml";
+    default:
+      return "application/octet-stream";
+  }
+}
 
 module.exports = async function (context, req) {
   try {

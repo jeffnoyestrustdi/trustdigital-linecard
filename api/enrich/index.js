@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { isAdmin } = require("../_shared/auth");
 
 function isLikelyHttps(u) {
   try { const p = new URL(u); return p.protocol === "https:"; } catch (_e) { return false; }
@@ -6,6 +7,12 @@ function isLikelyHttps(u) {
 
 module.exports = async function (context, req) {
   try {
+    // Admin-only endpoint to prevent unauthorized consumption of Azure OpenAI resources
+    if (!isAdmin(req)) {
+      context.res = { status: 403, body: { error: "Forbidden" } };
+      return;
+    }
+
     const name = (req.query.name || (req.body && req.body.name) || "").trim();
     if (!name) { context.res = { status: 400, body: { error: "Missing 'name' parameter" } }; return; }
 

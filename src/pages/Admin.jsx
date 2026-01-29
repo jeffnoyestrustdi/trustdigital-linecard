@@ -205,7 +205,7 @@ export default function Admin() {
                 <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                   <input type="checkbox" checked={selectedFields.logo} onChange={() => toggleField("logo")} />
                   <div>
-                    <strong>Logo:</strong> <img src={enrichResult.logo} alt="logo" style={{ maxWidth: 64, maxHeight: 64, marginLeft: 8 }} />
+                    <strong>Logo:</strong> <img src={enrichResult.logo} alt={`${enrichResult.domain || enrichName} logo`} style={{ maxWidth: 64, maxHeight: 64, marginLeft: 8 }} />
                     <div style={{ fontSize: 12, color: "#666" }}>{enrichResult.logo}</div>
                   </div>
                 </label>
@@ -259,12 +259,15 @@ export default function Admin() {
       <div style={{ border: "2px solid #28a745", borderRadius: 8, padding: 20, marginBottom: 20, backgroundColor: "#f8f9fa" }}>
         <h2>Step 2: Upload Logo (Optional)</h2>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={e => setLogoFile(e.target.files[0])}
-            style={{ flex: 1 }}
-          />
+          <label htmlFor="logoFileInput" style={{ flex: 1 }}>
+            <input
+              id="logoFileInput"
+              type="file"
+              accept="image/*"
+              onChange={e => setLogoFile(e.target.files[0])}
+              style={{ width: "100%" }}
+            />
+          </label>
           <button onClick={uploadLogo} disabled={uploading || !logoFile} style={{ padding: "8px 16px", fontSize: 16 }}>
             {uploading ? "Uploading..." : "Upload Logo"}
           </button>
@@ -273,7 +276,7 @@ export default function Admin() {
           <div style={{ marginTop: 10 }}>
             <strong>Uploaded Logo URL:</strong> <a href={uploadedLogoUrl} target="_blank" rel="noopener noreferrer">{uploadedLogoUrl}</a>
             <br />
-            <img src={uploadedLogoUrl} alt="uploaded logo" style={{ maxWidth: 128, maxHeight: 128, marginTop: 8 }} />
+            <img src={uploadedLogoUrl} alt={`Uploaded ${form.vendor || "logo"}`} style={{ maxWidth: 128, maxHeight: 128, marginTop: 8 }} />
           </div>
         )}
       </div>
@@ -308,15 +311,15 @@ export default function Admin() {
         </thead>
         <tbody>
           {items.map(x => (
-            <tr key={x.rowKey} style={{ borderTop:"1px solid #ddd" }}>
+            <tr key={x.id} style={{ borderTop:"1px solid #ddd" }}>
               <td>{x.vendor}</td>
               <td>{x.category}</td>
               <td>{x.primaryOffering}</td>
               <td>{x.secondaryOffering}</td>
               <td>
-                {x.logoUrl && <img src={x.logoUrl} alt="logo" style={{ maxWidth: 48, maxHeight: 48 }} />}
+                {x.logoUrl && <img src={x.logoUrl} alt={`${x.vendor} logo`} style={{ maxWidth: 48, maxHeight: 48 }} />}
               </td>
-              <td><button onClick={()=>remove(x.rowKey)}>Delete</button></td>
+              <td><button onClick={()=>remove(x.id)}>Delete</button></td>
             </tr>
           ))}
         </tbody>
