@@ -33,8 +33,10 @@ export default function Admin() {
       credentials: "include"
     });
 
-    if (!r.ok) alert(await r.text());
-    else {
+    if (!r.ok) {
+      const text = (await r.text()) || "(no body)";
+      alert(`${r.status} ${r.statusText}: ${text}`);
+    } else {
       setForm({ vendor:"", category:"", primaryOffering:"", secondaryOffering:"", tags:"" });
       load();
     }
@@ -45,8 +47,10 @@ export default function Admin() {
       method: "DELETE",
       credentials: "include"
     });
-    if (!r.ok) alert(await r.text());
-    else load();
+    if (!r.ok) {
+      const text = (await r.text()) || "(no body)";
+      alert(`${r.status} ${r.statusText}: ${text}`);
+    } else load();
   }
 
   return (
@@ -60,4 +64,33 @@ export default function Admin() {
         <input placeholder="Primary Offering" value={form.primaryOffering} onChange={e=>setForm({...form, primaryOffering:e.target.value})}/>
         <input placeholder="Secondary Offering" value={form.secondaryOffering} onChange={e=>setForm({...form, secondaryOffering:e.target.value})}/>
         <input placeholder="Tags (comma separated)" value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})}/>
-        <button onClick={
+        <button onClick={add}>Add Vendor Entry</button>
+      </div>
+
+      <hr style={{ margin:"20px 0" }} />
+
+      <table width="100%" cellPadding="8" style={{ borderCollapse:"collapse" }}>
+        <thead>
+          <tr>
+            <th align="left">Vendor</th>
+            <th align="left">Category</th>
+            <th align="left">Primary</th>
+            <th align="left">Secondary</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(x => (
+            <tr key={x.id} style={{ borderTop:"1px solid #ddd" }}>
+              <td>{x.vendor}</td>
+              <td>{x.category}</td>
+              <td>{x.primaryOffering}</td>
+              <td>{x.secondaryOffering}</td>
+              <td><button onClick={()=>remove(x.id)}>Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
