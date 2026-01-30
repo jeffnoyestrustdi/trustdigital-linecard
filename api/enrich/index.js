@@ -182,16 +182,12 @@ return ONLY valid JSON (no explanation, no markdown). If there is no JSON, retur
 
     context.res = { status: 200, body: parsed };
 
-  } catch (err) {
-    // TEMP DEBUG: include message and stack in HTTP response for troubleshooting
-    context.log("enrich: UNHANDLED", err);
-    context.res = {
-      status: 500,
-      body: {
-        error: String(err),
-        message: err && err.message ? err.message : null,
-        stack: err && err.stack ? err.stack.split("\n") : []
-      }
-    };
-  }
+ } catch (err) {
+  // Log full error server-side, but return a generic message to the client
+  context.log("enrich: UNHANDLED", err);
+  context.res = {
+    status: 500,
+    body: { error: "Internal server error" }
+  };
+}
 };
