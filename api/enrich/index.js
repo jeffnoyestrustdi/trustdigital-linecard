@@ -1,4 +1,4 @@
-﻿const fetch = require("node-fetch");
+﻿const { URL } = require("url"); // if you need URL class explicitly
 
 function isLikelyHttps(u) {
   try { const p = new URL(u); return p.protocol === "https:"; } catch (e) { return false; }
@@ -7,7 +7,7 @@ function isLikelyHttps(u) {
 module.exports = async function (context, req) {
   try {
     const name = (req.query.name || (req.body && req.body.name) || "").trim();
-    if (!name) { context.res = { status: 400, body: { error: "Missing '\''name'\'' parameter" } }; return; }
+    if (!name) { context.res = { status: 400, body: { error: "Missing 'name' parameter" } }; return; }
 
     if ((process.env.USE_MOCK_ENRICH || "").toLowerCase() === "true") {
       context.res = { status: 200, body: {
@@ -30,30 +30,14 @@ module.exports = async function (context, req) {
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
     if (!endpoint || !key || !deployment) { context.res = { status: 500, body: { error: "OpenAI configuration missing" } }; return; }
 
-    const systemPrompt = `
-You are a factual assistant. Given only a manufacturer's name, return a JSON object (no other text)
-with keys: website, domain, logo, description, topProducts, categories, tags, confidence, sources, notes.
-
-Rules:
-- Respond only with valid JSON.
-- website: the official website URL if known, otherwise null.
-- domain: the root domain (example.com) if known, otherwise null.
-- logo: a URL to the company logo if you can provide one confidently; otherwise null.
-- topProducts: an array of objects {name, url, description?} for 0..5 well-known products. If you are not sure of a product's official URL, set url to null.
-- categories: array of 0..5 short category names.
-- tags: array of keywords.
-- confidence: a number 0.0 - 1.0 indicating how confident you are in the data.
-- sources: an array of URLs you used (if any). If none, leave it empty.
-- notes: short string explaining uncertainty or caveats.
-
-Crucial: Do NOT invent websites, domains, product URLs or logo URLs. If you do not know a website or URL, return null for that field and set confidence low. Output must be parseable JSON only.
-`;
+    const systemPrompt = `...`; // keep as-is
 
     const userPrompt = `Enrich the manufacturer: "${name}"`;
 
     const apiUrl = `${endpoint.replace(/\/$/, "")}/openai/deployments/${encodeURIComponent(deployment)}/chat/completions?api-version=2023-05-15`;
     const body = { messages: [ { role: "system", content: systemPrompt }, { role: "user", content: userPrompt } ], temperature: 0.2, max_tokens: 800 };
 
+    // Use the built-in fetch available in Node 18+ instead of node-fetch
     const resp = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json", "api-key": key }, body: JSON.stringify(body) });
     if (!resp.ok) { const txt = await resp.text(); context.log("OpenAI error:", resp.status, txt); context.res = { status: 502, body: { error: "OpenAI error", detail: txt } }; return; }
 
