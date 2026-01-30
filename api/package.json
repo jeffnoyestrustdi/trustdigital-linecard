@@ -4,6 +4,6 @@
   "private": true,
   "dependencies": {
     "@azure/data-tables": "^13.3.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.0"
   }
 }
