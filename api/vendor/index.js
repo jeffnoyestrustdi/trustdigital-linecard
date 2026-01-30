@@ -1,67 +1,63 @@
-const { getClient } = require("../_shared/table");
-const { isAdmin, getUserEmail } = require("../_shared/auth");
-const crypto = require("crypto");
+﻿const { isAdmin, getUserEmail } = require("../_shared/auth");
+const { v4: uuidv4 } = require("uuid");
+const { TableClient } = require("@azure/data-tables");
+
+function getTableClient() {
+  const conn = process.env.LINECARD_STORAGE_CONN;
+  if (!conn) throw new Error("LINECARD_STORAGE_CONN not set");
+  const tableName = process.env.LINECARD_TABLE || "LineCard";
+  return TableClient.fromConnectionString(conn, tableName);
+}
 
 module.exports = async function (context, req) {
   try {
-    context.log("vendor invoked", { method: req.method });
+    const method = (req.method || "GET").toUpperCase();
 
-    // Log whether the SWA identity header was present
-    const encoded = req.headers && req.headers["x-ms-client-principal"];
-    context.log("vendor: x-ms-client-principal present:", !!encoded);
-
-    // Also log the email as extracted by our helper (if any)
-    const email = getUserEmail(req);
-    context.log("vendor: extracted email:", email || "(none)");
-
-    // Authorization check (unchanged)
-    if (!isAdmin(req)) {
-      context.log("vendor: isAdmin returned false");
-      context.res = { status: 403, headers: { "content-type": "text/plain" }, body: "Forbidden" };
+    if (method === "GET") {
+      const client = getTableClient();
+      const entities = [];
+      for await (const e of client.listEntities()) entities.push(e);
+      context.res = { status: 200, body: entities };
       return;
     }
 
-    // Attempt to get storage client (this can throw if conn string missing)
-    const client = await getClient();
+    if (method === "POST") {
+      if (!isAdmin(req)) { context.res = { status: 403, body: { error: "Forbidden" } }; return; }
+      const body = req.body || {};
+      const vendor = (body.vendor || "").trim();
+      if (!vendor) { context.res = { status: 400, body: { error: "vendor is required" } }; return; }
 
-    if (req.method === "POST") {
-      const b = req.body || {};
-      const id = crypto.randomUUID();
+      const entity = {
+        partitionKey: "vendor",
+        rowKey: uuidv4(),
+        vendor,
+        category: body.category || "",
+        primaryOffering: body.primaryOffering || "",
+        secondaryOffering: body.secondaryOffering || "",
+        tags: JSON.stringify(body.tags || []),
+        createdBy: getUserEmail(req) || "",
+        createdAt: new Date().toISOString()
+      };
 
-      await client.createEntity({
-        partitionKey: "linecard",
-        rowKey: id,
-        vendor: b.vendor || "",
-        category: b.category || "",
-        primaryOffering: b.primaryOffering || "",
-        secondaryOffering: b.secondaryOffering || "",
-        tags: JSON.stringify(b.tags || [])
-      });
+      if (body.logo) entity.logoUrl = body.logo;
+      if (body.enrich) entity.enrich = JSON.stringify(body.enrich);
 
-      context.res = { status: 201, headers: { "content-type": "application/json" }, body: { ok: true, id } };
+      const client = getTableClient();
+      await client.createEntity(entity);
+      context.res = { status: 201, body: { id: entity.rowKey } };
       return;
     }
 
-    if (req.method === "DELETE") {
-      const id = req.query.id;
-      if (!id) {
-        context.res = { status: 400, headers: { "content-type": "text/plain" }, body: "Missing id" };
-        return;
-      }
-
-      await client.deleteEntity("linecard", id);
-      context.res = { status: 200, headers: { "content-type": "application/json" }, body: { ok: true } };
+    if (method === "DELETE") {
+      if (!isAdmin(req)) { context.res = { status: 403, body: { error: "Forbidden" } }; return; }
+      const id = req.query.id || (req.body && req.body.id);
+      if (!id) { context.res = { status: 400, body: { error: "Missing id" } }; return; }
+      const client = getTableClient();
+      await client.deleteEntity("vendor", id);
+      context.res = { status: 200, body: { deleted: id } };
       return;
     }
 
-    context.res = { status: 405, headers: { "content-type": "text/plain" }, body: "Method not allowed" };
-  } catch (err) {
-    // Log and return the stack so we can see the exact failure in the browser and logs.
-    context.log("vendor: UNHANDLED ERROR:", err?.stack || String(err));
-    context.res = {
-      status: 500,
-      headers: { "content-type": "text/plain" },
-      body: err?.stack || String(err)
-    };
-  }
+    context.res = { status: 405, body: { error: "Method not supported" } };
+  } catch (err) { context.log("vendor api error:", err); context.res = { status: 500, body: { error: String(err) } }; }
 };
